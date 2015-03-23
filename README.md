@@ -1,7 +1,7 @@
 Instrucciones de instalación y ejecución de la API de la librería
 
-Este es el proceso que hay que seguir para hacer funcionar la API de la librería: 
-1- Descargar proyecto de GitHub 
+1- Descargar proyecto de GitHub
+
 2- Construir proyecto Maven desde terminal:
 
     Acceder al directorio donde se encuentra el proyecto
