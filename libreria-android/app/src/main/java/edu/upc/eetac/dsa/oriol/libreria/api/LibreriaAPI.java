@@ -6,6 +6,7 @@ package edu.upc.eetac.dsa.oriol.libreria.api;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -229,4 +230,124 @@ public class LibreriaAPI {
         return book;
     }
     //////////////////////////////////////////////////////////////////////
+    //Create Review
+    public Review createReview(String content, String username, String name, int bookid) throws AppException {
+        Review review = new Review();
+        review.setContent(content);
+        review.setBookid(bookid);
+        review.setUsername(username);
+        review.setName(name);
+        HttpURLConnection urlConnection = null;
+        try {
+            JSONObject jsonReview = createJsonReview(review);
+            URL urlPostReviews = new URL(rootAPI.getLinks().get("post-reviews")
+                    .getTarget());
+            urlConnection = (HttpURLConnection) urlPostReviews.openConnection();
+            String mediaType = rootAPI.getLinks().get("post-reviews").getParameters().get("type"); //Esta línea no estaba en el gist
+            urlConnection.setRequestProperty("Accept",
+                    mediaType); //Esto estaba mal en los gists
+            urlConnection.setRequestProperty("Content-Type",
+                    mediaType);
+            urlConnection.setRequestMethod("POST");
+            urlConnection.setDoInput(true);
+            urlConnection.setDoOutput(true);
+            urlConnection.connect();
+            PrintWriter writer = new PrintWriter(
+                    urlConnection.getOutputStream());
+            writer.println(jsonReview.toString());
+            writer.close();
+            BufferedReader reader = new BufferedReader(new InputStreamReader(
+                    urlConnection.getInputStream()));
+            StringBuilder sb = new StringBuilder();
+            String line = null;
+            while ((line = reader.readLine()) != null) {
+                sb.append(line);
+            }
+            jsonReview = new JSONObject(sb.toString());
+
+            review.setBookid(jsonReview.getInt("book"));
+            review.setContent(jsonReview.getString("content"));
+            review.setName(jsonReview.getString("name"));
+            review.setUsername(jsonReview.getString("username"));
+
+            //JSONArray jsonLinks = jsonReview.getJSONArray("links");
+            //parseLinks(jsonLinks, review.getLinks());
+        } catch (JSONException e) {
+            Log.e(TAG, e.getMessage(), e);
+            throw new AppException("Error parsing response");
+        } catch (IOException e) {
+            Log.e(TAG, e.getMessage(), e);
+            throw new AppException("Error getting response");
+        } finally {
+            if (urlConnection != null)
+                urlConnection.disconnect();
+        }
+
+        return review;
+    }
+
+    private JSONObject createJsonReview(Review review) throws JSONException {
+        JSONObject jsonSting = new JSONObject();
+        jsonSting.put("content", review.getContent());
+        jsonSting.put("username", review.getUsername());
+        jsonSting.put("name", review.getName());
+        jsonSting.put("book", review.getBookid());
+
+        return jsonSting;
+    }
+
+    /////////////////////////////////////////////////////////////////////////////
+    //Get Reviews
+    public ReviewCollection getReviews(String urlReviews) throws AppException {
+        Log.d(TAG, "getReviews()");
+        ReviewCollection reviews = new ReviewCollection();
+
+        HttpURLConnection urlConnection = null;
+        try {
+            URL url = new URL(urlReviews);
+            urlConnection = (HttpURLConnection) url.openConnection();
+            urlConnection.setRequestMethod("GET");
+            urlConnection.setDoInput(true);
+            urlConnection.connect();
+        } catch (IOException e) {
+            throw new AppException(
+                    "Can't connect to Libreria API Web Service");
+        }
+
+        BufferedReader reader;
+        try {
+            reader = new BufferedReader(new InputStreamReader(
+                    urlConnection.getInputStream()));
+            StringBuilder sb = new StringBuilder();
+            String line = null;
+            while ((line = reader.readLine()) != null) {
+                sb.append(line);
+            }
+
+            JSONObject jsonObject = new JSONObject(sb.toString());
+            JSONArray jsonLinks = jsonObject.getJSONArray("links");
+            parseLinks(jsonLinks, reviews.getLinks());
+            JSONArray jsonReviews = jsonObject.getJSONArray("reviews");
+            for (int i = 0; i < jsonReviews.length(); i++) {
+                Review review = new Review();
+                JSONObject jsonReview = jsonReviews.getJSONObject(i);
+                review.setBookid(jsonReview.getInt("reviewid"));
+                review.setContent(jsonReview.getString("content"));
+                review.setName(jsonReview.getString("name"));
+                review.setUsername(jsonReview.getString("username"));
+                review.setBookid(jsonReview.getInt("book"));
+
+                //jsonLinks = jsonReview.getJSONArray("links");
+                //parseLinks(jsonLinks, review.getLinks());
+                reviews.getReviews().add(review);
+            }
+        } catch (IOException e) {
+            throw new AppException(
+                    "Can't get response from Libreria API Web Service");
+        } catch (JSONException e) {
+            throw new AppException("Error parsing Libreria Root API");
+        }
+
+        return reviews;
+    }
 }

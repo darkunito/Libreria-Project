@@ -9,9 +9,9 @@
 
 
     <item
-        android:id="@+id/reviewsMenuItem"
+        android:id="@+id/writeReviewMenuItem"
         android:icon="@android:drawable/ic_menu_edit"
-        android:title="Ver Reviews"
+        android:title="Escribir Review"
         app:showAsAction="always|withText" />
 
 </menu>

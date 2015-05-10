@@ -2,9 +2,13 @@ package edu.upc.eetac.dsa.oriol.libreria;
 
 import android.app.Activity;
 import android.app.ProgressDialog;
+import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.widget.TextView;
 
 import java.text.SimpleDateFormat;
@@ -84,5 +88,32 @@ public class BookDetailActivity extends Activity{
             pd.show();
         }
 
+    }
+    //////////////////////////////////////////////////
+    //Menú escribir Review
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.menu_libreria_main, menu);
+        return true;
+    }
+
+    String urlReviews = null;
+    String urlBook = null;
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.reviewsMenuItem:
+                Intent intent = new Intent(this, BookReviewsActivity.class);
+                //intent.putExtra("url", book.getLinks().get("reviews").getTarget());
+                intent.putExtra("url", urlReviews);
+                intent.putExtra("url_book", urlBook);
+                startActivity(intent);
+                return true;
+
+            default:
+                return super.onOptionsItemSelected(item);
+        }
     }
 }
